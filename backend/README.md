@@ -9,7 +9,8 @@ validação de valores, filtros por mês/ano e cálculo do balanço. Node.js + E
 cd backend
 npm install
 
-# Sem banco (dados de exemplo em memória, somem ao reiniciar)
+# Sem banco (dados de exemplo em memória, somem ao reiniciar).
+# Também vale para npm start quando o .env não tem DB_HOST.
 # Login de exemplo: thiago@exemplo.com / 123456
 npm run dev:memoria
 
@@ -18,7 +19,8 @@ npm run dev:memoria
 npm start
 ```
 
-A API sobe em `http://localhost:3000/api`.
+A API sobe em `http://localhost:3000/api` e o front em `http://localhost:3000`.
+Na Vercel, quem sobe a API é `api/index.js` (na raiz do repositório); veja o README principal.
 
 ### Testes
 

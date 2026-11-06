@@ -62,3 +62,16 @@ saldo. Ter várias contas exigiria uma tabela `contas`, o campo `conta_id` em `t
 nas telas e nos filtros.
 
 **A decidir pelo grupo** antes de implementar.
+
+## 6. Hospedagem na Vercel
+
+**Decisão:** front e API ficam no mesmo projeto da Vercel, publicado a partir da raiz do repositório.
+O front é servido como arquivos estáticos e a API roda como função (`api/index.js`), usando o mesmo
+código de `backend/`. Como os dois ficam no mesmo endereço, o front chama `/api` sem precisar de CORS.
+
+**Banco:** a Vercel não oferece MySQL, então o banco fica num MySQL na nuvem (ex.: Aiven) com conexão
+por TLS (`DB_SSL=true`). Sem banco configurado, a API sobe em modo demonstração com os dados de exemplo
+em memória, que podem sumir a qualquer momento.
+
+**Favoritas e ordem das categorias** passam a ser salvas na conta (campos `favorita` e `ordem` da API),
+e não mais no navegador.

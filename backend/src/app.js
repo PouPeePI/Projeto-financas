@@ -28,7 +28,7 @@ function traduzirErroBanco(err) {
   return null;
 }
 
-function criarApp(repos, { origemPermitida = '*', segredoJwt }) {
+function criarApp(repos, { origemPermitida = '*', segredoJwt, modo = 'mysql' }) {
   if (!segredoJwt) throw new Error('criarApp precisa de segredoJwt');
   const usuarios = criarServicoUsuarios(repos, { segredoJwt });
   const categorias = criarServicoCategorias(repos);
@@ -38,7 +38,7 @@ function criarApp(repos, { origemPermitida = '*', segredoJwt }) {
   const app = express();
   app.use(express.json());
 
-  // CORS: o front roda separado (Live Server / GitHub Pages)
+  // CORS: o front pode rodar separado (Live Server); na Vercel fica no mesmo endereço
   app.use((req, res, next) => {
     res.set('Access-Control-Allow-Origin', origemPermitida);
     res.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
@@ -47,7 +47,8 @@ function criarApp(repos, { origemPermitida = '*', segredoJwt }) {
     next();
   });
 
-  app.get('/api/saude', (req, res) => res.json({ ok: true }));
+  // modo: 'mysql' ou 'memoria' (demonstração, sem banco: os dados podem sumir)
+  app.get('/api/saude', (req, res) => res.json({ ok: true, modo }));
 
   // ---------- Conta (rotas abertas) ----------
   app.post('/api/usuarios', rota(async (req, res) => {
