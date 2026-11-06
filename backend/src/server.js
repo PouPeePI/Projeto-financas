@@ -1,35 +1,24 @@
-// Sobe a API. Por padrão usa o MySQL; com --memoria (npm run dev:memoria) roda sem banco
-// (dados de exemplo do seed, perdidos ao reiniciar).
+// Sobe a API localmente. Usa o MySQL do .env; com --memoria (npm run dev:memoria),
+// ou sem DB_HOST no .env, roda sem banco (dados de exemplo, perdidos ao reiniciar).
+// Também serve o front (index.html, script.js, styles.css da raiz do repositório),
+// então dá pra abrir http://localhost:3000 direto.
 require('dotenv').config({ quiet: true });
-const { criarApp } = require('./app');
+const path = require('path');
+const express = require('express');
+const { montarApp } = require('./montar');
 
 async function iniciar() {
   const porta = Number(process.env.PORT || 3000);
-  let repos;
+  const app = await montarApp({ memoria: process.argv.includes('--memoria') });
 
-  if (process.argv.includes('--memoria')) {
-    const { criarRepositoriosMemoria } = require('./repositorios/memoria');
-    const { popularExemplo } = require('./repositorios/exemplo');
-    repos = criarRepositoriosMemoria();
-    await popularExemplo(repos);
-    console.log('Usando dados em memória. Login de exemplo: thiago@exemplo.com / 123456');
-  } else {
-    const { criarPool } = require('./repositorios/mysql/conexao');
-    const { criarRepositoriosMysql } = require('./repositorios/mysql');
-    const pool = criarPool();
-    await pool.query('SELECT 1'); // falha cedo se o banco não estiver acessível
-    repos = criarRepositoriosMysql(pool);
-    console.log(`Conectado ao MySQL em ${process.env.DB_HOST || 'localhost'}`);
+  const raiz = path.join(__dirname, '..', '..');
+  const site = express();
+  for (const arquivo of ['index.html', 'script.js', 'styles.css']) {
+    site.get(arquivo === 'index.html' ? '/' : `/${arquivo}`, (req, res) => res.sendFile(path.join(raiz, arquivo)));
   }
+  site.use(app); // rotas /api/...
 
-  let segredoJwt = process.env.JWT_SEGREDO;
-  if (!segredoJwt) {
-    segredoJwt = require('crypto').randomBytes(32).toString('hex');
-    console.warn('JWT_SEGREDO não definido no .env: usando um segredo temporário (todo mundo precisa entrar de novo quando o servidor reiniciar)');
-  }
-
-  criarApp(repos, { origemPermitida: process.env.CORS_ORIGEM || '*', segredoJwt })
-    .listen(porta, () => console.log(`API do Poupee em http://localhost:${porta}/api`));
+  site.listen(porta, () => console.log(`Poupee em http://localhost:${porta} (API em /api)`));
 }
 
 iniciar().catch(err => {

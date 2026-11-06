@@ -1,0 +1,16 @@
+{
+  "name": "poupee",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Poupee na Vercel: o front (index.html) e a função api/index.js, que usa o back-end de backend/. As dependências abaixo são as mesmas de backend/package.json (mantenha iguais).",
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "bcryptjs": "^3.0.3",
+    "dotenv": "^18.0.9",
+    "express": "^4.22.3",
+    "jsonwebtoken": "^9.0.3",
+    "mysql2": "^3.24.6"
+  }
+}

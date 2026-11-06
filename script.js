@@ -1,38 +1,13 @@
 // =====================================================================
-// ESTADO DA APLICAÇÃO (dados em memória, escopo da sessão)
+// ESTADO DA APLICAÇÃO (carregado da API depois do login)
 // =====================================================================
 const MESES = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
 const MESES_ABREV = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
 
-let proximoId = 100;
-function gerarId(){ return String(proximoId++); }
-
-// Categorias — cada uma pertence a despesas ou receitas, base pra picker do formulário
-const categorias = [
-  { id:'c1', nome:'Moradia',      cor:'#F2600C', tipo:'despesa', icone:'🏠' },
-  { id:'c2', nome:'Alimentação',  cor:'#2F7DBF', tipo:'despesa', icone:'🛒' },
-  { id:'c3', nome:'Transporte',   cor:'#8A5CD6', tipo:'despesa', icone:'⛽' },
-  { id:'c4', nome:'Lazer',        cor:'#D6497D', tipo:'despesa', icone:'🎬' },
-  { id:'c5', nome:'Saúde',        cor:'#3EA37A', tipo:'despesa', icone:'💊' },
-  { id:'c6', nome:'Educação',     cor:'#C9A227', tipo:'despesa', icone:'📚' },
-  { id:'c7', nome:'Outros',       cor:'#6B6B66', tipo:'despesa', icone:'📦' },
-  { id:'c8', nome:'Renda Fixa',   cor:'#1E8A5F', tipo:'receita', icone:'💼' },
-  { id:'c9', nome:'Renda Extra',  cor:'#3FA36B', tipo:'receita', icone:'💻' },
-  { id:'c10',nome:'Investimentos',cor:'#2F9E82', tipo:'receita', icone:'📈' },
-];
-
+// Categorias do usuário — cada uma pertence a despesas ou receitas
+const categorias = [];
 // Lançamentos — despesas têm status (pagar/paga); receitas ficam sempre como recebidas
-const transacoes = [
-  { id:'t1', tipo:'despesa', descricao:'Aluguel',              valor:950.00, data:'2026-09-05', categoriaId:'c1', status:'pagar' },
-  { id:'t2', tipo:'despesa', descricao:'Mercado',               valor:386.40, data:'2026-08-28', categoriaId:'c2', status:'paga' },
-  { id:'t3', tipo:'despesa', descricao:'Combustível',           valor:210.00, data:'2026-09-18', categoriaId:'c3', status:'pagar' },
-  { id:'t4', tipo:'despesa', descricao:'Internet',              valor:99.90,  data:'2026-08-10', categoriaId:'c1', status:'paga' },
-  { id:'t5', tipo:'despesa', descricao:'Assinatura streaming',  valor:39.90,  data:'2026-09-22', categoriaId:'c4', status:'pagar' },
-  { id:'t6', tipo:'despesa', descricao:'Farmácia',               valor:68.20,  data:'2026-08-14', categoriaId:'c5', status:'paga' },
-  { id:'t7', tipo:'receita', descricao:'Salário',                valor:4200.00,data:'2026-08-01', categoriaId:'c8', status:'paga' },
-  { id:'t8', tipo:'receita', descricao:'Freelance de design',    valor:1500.00,data:'2026-08-14', categoriaId:'c9', status:'paga' },
-  { id:'t9', tipo:'receita', descricao:'Dividendos',             valor:420.00, data:'2026-08-20', categoriaId:'c10',status:'paga' },
-];
+const transacoes = [];
 
 // Filtro de período compartilhado entre Dashboard, Despesas e Receitas
 const filtroPeriodo = { mes:'todos', ano:'todos' };
@@ -42,22 +17,78 @@ let categoriaEditandoId = null; // null = criando categoria nova
 let lancamentoEditandoId = null; // null = criando lançamento novo
 let novoLancamentoTipo = 'despesa';
 
-// Preferências salvas no navegador (favoritas e ordem das categorias)
-const PREFS_KEY = 'poupee_categorias_prefs';
-function carregarPrefsCategorias(){
+// =====================================================================
+// COMUNICAÇÃO COM A API (back-end em backend/, mesma origem na Vercel)
+// =====================================================================
+// Aberto pelo Live Server ou direto do arquivo: a API roda em localhost:3000.
+// Servido pela própria API (npm start) ou pela Vercel: mesmo endereço.
+const API_BASE = (location.protocol === 'file:' || ['5500','5501'].includes(location.port))
+  ? 'http://localhost:3000/api'
+  : '/api';
+const TOKEN_KEY = 'poupee_token';
+let usuarioAtual = null;
+
+function tokenSalvo(){ try{ return localStorage.getItem(TOKEN_KEY); }catch(e){ return null; } }
+
+async function api(metodo, caminho, corpo){
+  const headers = {};
+  const token = tokenSalvo();
+  if(token) headers.Authorization = `Bearer ${token}`;
+  if(corpo !== undefined) headers['Content-Type'] = 'application/json';
+  let resp;
   try{
-    const raw = localStorage.getItem(PREFS_KEY);
-    if(!raw) return { favoritas:[], ordem:categorias.map(c => c.id) };
-    const dados = JSON.parse(raw);
-    return { favoritas: dados.favoritas || [], ordem: dados.ordem || categorias.map(c => c.id) };
-  }catch(e){ return { favoritas:[], ordem:categorias.map(c => c.id) }; }
+    resp = await fetch(API_BASE + caminho, { method: metodo, headers, body: corpo === undefined ? undefined : JSON.stringify(corpo) });
+  }catch(e){
+    throw new Error('Não foi possível falar com o servidor. Verifique sua conexão.');
+  }
+  const texto = await resp.text();
+  let dados = null;
+  try{ dados = texto ? JSON.parse(texto) : null; }catch(e){ dados = null; }
+  if(!resp.ok){
+    // Token vencido ou inválido: volta pro login (menos na própria tela de login)
+    if(resp.status === 401 && token){
+      sairDaConta();
+      showView('login');
+    }
+    const campos = dados && dados.campos ? Object.values(dados.campos) : [];
+    const erro = new Error(campos[0] || (dados && dados.erro) || 'Algo deu errado. Tente de novo.');
+    erro.status = resp.status;
+    throw erro;
+  }
+  return dados;
 }
-function salvarPrefsCategorias(){
-  localStorage.setItem(PREFS_KEY, JSON.stringify({ favoritas: prefsCategorias.favoritas, ordem: prefsCategorias.ordem }));
+
+// A API devolve ids numéricos; o front usa texto (data-* do HTML)
+function categoriaDaApi(c){
+  return { id:String(c.id), nome:c.nome, cor:c.cor, tipo:c.tipo, icone:c.icone, favorita:!!c.favorita, ordem:Number(c.ordem) || 0 };
 }
-let prefsCategorias = carregarPrefsCategorias();
-// Garante que categorias criadas depois da última visita também entrem na ordem salva
-categorias.forEach(c => { if(!prefsCategorias.ordem.includes(c.id)) prefsCategorias.ordem.push(c.id); });
+function transacaoDaApi(t){
+  return { id:String(t.id), tipo:t.tipo, descricao:t.descricao, valor:Number(t.valor), data:t.data, categoriaId:String(t.categoriaId), status:t.status };
+}
+
+// Busca categorias e lançamentos do usuário. Os filtros de período/busca
+// são aplicados aqui no front sobre essa lista.
+async function carregarDados(){
+  const [cats, txs] = await Promise.all([api('GET', '/categorias'), api('GET', '/transacoes')]);
+  categorias.splice(0, categorias.length, ...cats.map(categoriaDaApi));
+  transacoes.splice(0, transacoes.length, ...txs.map(transacaoDaApi));
+}
+
+// Recarrega depois de criar/editar/excluir e redesenha a tela atual
+async function recarregarERenderizar(){
+  await carregarDados();
+  popularSelectsPeriodo();
+  renderDashboard();
+  renderDespesas();
+  renderReceitas();
+  renderCategorias();
+}
+
+// Executa uma ação na API mostrando o erro num toast, se der errado
+async function tentar(acao){
+  try{ return await acao(); }
+  catch(e){ toast(e.message, 'error'); return undefined; }
+}
 
 // =====================================================================
 // HELPERS
@@ -73,7 +104,8 @@ function formatarDataCurta(str){
   const d = parseDataLocal(str);
   return `${String(d.getDate()).padStart(2,'0')} ${MESES_ABREV[d.getMonth()]}`;
 }
-function categoriaPorId(id){ return categorias.find(c => c.id === id); }
+const CATEGORIA_DESCONHECIDA = { id:'', nome:'Sem categoria', cor:'#6B6B66', icone:'📦' };
+function categoriaPorId(id){ return categorias.find(c => c.id === id) || CATEGORIA_DESCONHECIDA; }
 
 function toast(mensagem, tipo){
   const container = document.getElementById('toastContainer');
@@ -160,6 +192,8 @@ document.querySelectorAll('.theme-toggle').forEach(btn => {
     root.dataset.theme = root.dataset.theme === 'dark' ? 'light' : 'dark';
     syncThemeIcons();
     atualizarGraficos();
+    // Guarda a preferência na conta (se estiver logado)
+    if(usuarioAtual) api('PUT', '/eu', { tema: root.dataset.theme }).catch(() => {});
   });
 });
 
@@ -172,14 +206,74 @@ const logoutBtn = document.getElementById('logoutBtn');
 
 function showView(view){ document.body.dataset.view = view; }
 
-function entrarNoApp(){
+function mostrarUsuario(usuario){
+  usuarioAtual = usuario;
+  const nome = usuario.nome || '';
+  document.getElementById('usuarioNome').textContent = nome;
+  const partes = nome.trim().split(/\s+/).filter(Boolean);
+  const iniciais = partes.length > 1 ? partes[0][0] + partes[partes.length-1][0] : (partes[0] || '?').slice(0,2);
+  document.getElementById('usuarioIniciais').textContent = iniciais.toUpperCase();
+  if(usuario.tema === 'dark' || usuario.tema === 'light'){
+    root.dataset.theme = usuario.tema;
+    syncThemeIcons();
+  }
+}
+
+// Depois do login/cadastro: carrega os dados da conta e abre o app
+async function entrarNoApp(sessao){
+  try{ localStorage.setItem(TOKEN_KEY, sessao.token); }catch(e){}
+  mostrarUsuario(sessao.usuario);
+  await carregarDados();
+  filtroPeriodo.mes = 'todos'; filtroPeriodo.ano = 'todos';
+  popularSelectsPeriodo();
+  onMudaPeriodo('todos', 'todos');
   showView('app');
   goTo('dashboard');
   iniciarOnboardingSePrimeiraVez();
 }
-loginBtn.addEventListener('click', entrarNoApp);
-signupBtn.addEventListener('click', entrarNoApp);
-logoutBtn.addEventListener('click', () => showView('landing'));
+
+function sairDaConta(){
+  try{ localStorage.removeItem(TOKEN_KEY); }catch(e){}
+  usuarioAtual = null;
+  categorias.length = 0;
+  transacoes.length = 0;
+}
+
+// Desabilita o botão enquanto a requisição está em andamento
+async function comBotaoOcupado(botao, acao){
+  if(botao.disabled) return;
+  const textoOriginal = botao.textContent;
+  botao.disabled = true;
+  botao.textContent = 'Aguarde...';
+  try{ await acao(); }
+  catch(e){ toast(e.message, 'error'); }
+  finally{ botao.disabled = false; botao.textContent = textoOriginal; }
+}
+
+loginBtn.addEventListener('click', () => comBotaoOcupado(loginBtn, async () => {
+  const email = document.getElementById('loginEmail').value.trim();
+  const senha = document.getElementById('loginSenha').value;
+  if(!email || !senha){ toast('Informe e-mail e senha', 'error'); return; }
+  const sessao = await api('POST', '/login', { email, senha });
+  document.getElementById('loginSenha').value = '';
+  await entrarNoApp(sessao);
+}));
+signupBtn.addEventListener('click', () => comBotaoOcupado(signupBtn, async () => {
+  const nome = document.getElementById('signupNome').value.trim();
+  const email = document.getElementById('signupEmail').value.trim();
+  const senha = document.getElementById('signupSenha').value;
+  const confirmacaoSenha = document.getElementById('signupSenha2').value;
+  const sessao = await api('POST', '/usuarios', { nome, email, senha, confirmacaoSenha });
+  document.getElementById('signupSenha').value = '';
+  document.getElementById('signupSenha2').value = '';
+  toast('Conta criada! Bem-vindo(a) ao Poupee');
+  await entrarNoApp(sessao);
+}));
+// Enter nos campos de senha também envia
+document.getElementById('loginSenha').addEventListener('keydown', e => { if(e.key === 'Enter') loginBtn.click(); });
+document.getElementById('signupSenha2').addEventListener('keydown', e => { if(e.key === 'Enter') signupBtn.click(); });
+document.getElementById('forgotBtn').addEventListener('click', () => toast('Recuperação de senha ainda não disponível', 'error'));
+logoutBtn.addEventListener('click', () => { sairDaConta(); showView('landing'); });
 
 document.querySelectorAll('.js-goto-signup').forEach(el => {
   el.addEventListener('click', (e) => { e.preventDefault(); showView('signup'); });
@@ -384,23 +478,25 @@ function linhaDespesaHtml(t){
   </div>`;
 }
 
-function alternarStatus(id){
+async function alternarStatus(id){
   const t = transacoes.find(x => x.id === id);
   if(!t) return;
-  t.status = t.status === 'paga' ? 'pagar' : 'paga';
-  toast(t.status === 'paga' ? 'Marcada como paga' : 'Marcada como a pagar');
-  renderDespesas();
-  renderDashboard();
+  const novoStatus = t.status === 'paga' ? 'pagar' : 'paga';
+  await tentar(async () => {
+    await api('PATCH', `/transacoes/${id}/status`, { status: novoStatus });
+    toast(novoStatus === 'paga' ? 'Marcada como paga' : 'Marcada como a pagar');
+    await recarregarERenderizar();
+  });
 }
 
-function excluirLancamento(id){
-  const idx = transacoes.findIndex(x => x.id === id);
-  if(idx === -1) return;
-  const tipo = transacoes[idx].tipo;
-  transacoes.splice(idx,1);
-  toast('Lançamento excluído');
-  if(tipo === 'despesa') renderDespesas(); else renderReceitas();
-  renderDashboard();
+async function excluirLancamento(id){
+  const t = transacoes.find(x => x.id === id);
+  if(!t) return;
+  await tentar(async () => {
+    await api('DELETE', `/transacoes/${id}`);
+    toast('Lançamento excluído');
+    await recarregarERenderizar();
+  });
 }
 
 document.getElementById('buscaDespesas').addEventListener('input', (e) => { filtroLista.buscaDespesas = e.target.value; renderDespesas(); });
@@ -465,7 +561,7 @@ function renderCatPicker(tipo){
   catPicker.innerHTML = opcoes.map(c => `<button type="button" class="cat-chip${c.id===categoriaSelecionadaId?' selected':''}" data-cat-id="${c.id}" aria-pressed="${c.id===categoriaSelecionadaId}"><span class="cat-dot" style="background:${c.cor}"></span>${escapeHtml(c.nome)}</button>`).join('');
   if(!opcoes.some(c => c.id === categoriaSelecionadaId)){
     categoriaSelecionadaId = opcoes[0] ? opcoes[0].id : null;
-    renderCatPicker(tipo); // re-renderiza já com a seleção padrão marcada
+    if(categoriaSelecionadaId) renderCatPicker(tipo); // re-renderiza já com a seleção padrão marcada
     return;
   }
   catPicker.querySelectorAll('.cat-chip').forEach(chip => {
@@ -533,7 +629,8 @@ document.getElementById('btnCancelarLancamento').addEventListener('click', () =>
   goTo(novoLancamentoTipo === 'despesa' ? 'despesas' : 'receitas');
 });
 
-document.getElementById('btnSalvarLancamento').addEventListener('click', () => {
+const btnSalvarLancamento = document.getElementById('btnSalvarLancamento');
+btnSalvarLancamento.addEventListener('click', () => comBotaoOcupado(btnSalvarLancamento, async () => {
   const descricao = inputDescricao.value.trim();
   const valor = valorInputParaNumero(inputValor);
   const data = inputVencimento.value;
@@ -546,16 +643,17 @@ document.getElementById('btnSalvarLancamento').addEventListener('click', () => {
   const statusAtivo = statusSegmented.querySelector('button.active');
   const status = novoLancamentoTipo === 'despesa' ? (statusAtivo ? statusAtivo.dataset.statusOpt : 'pagar') : 'paga';
 
+  const corpo = { tipo: novoLancamentoTipo, descricao, valor, data, categoriaId: Number(categoriaSelecionadaId), status };
   if(lancamentoEditandoId){
-    const t = transacoes.find(x => x.id === lancamentoEditandoId);
-    Object.assign(t, { descricao, valor, data, categoriaId: categoriaSelecionadaId, status, tipo: novoLancamentoTipo });
+    await api('PUT', `/transacoes/${lancamentoEditandoId}`, corpo);
     toast('Lançamento atualizado com sucesso');
   }else{
-    transacoes.push({ id: gerarId(), tipo: novoLancamentoTipo, descricao, valor, data, categoriaId: categoriaSelecionadaId, status });
+    await api('POST', '/transacoes', corpo);
     toast('Lançamento salvo com sucesso');
   }
+  await recarregarERenderizar();
   goTo(novoLancamentoTipo === 'despesa' ? 'despesas' : 'receitas');
-});
+}));
 
 // =====================================================================
 // CATEGORIAS — customização, favoritos e reordenação (drag-and-drop)
@@ -568,11 +666,11 @@ const catEditCor = document.getElementById('catEditCor');
 let catEditTipo = 'despesa';
 
 function renderCategorias(){
-  const ordenadas = [...categorias].sort((a,b) => prefsCategorias.ordem.indexOf(a.id) - prefsCategorias.ordem.indexOf(b.id));
+  const ordenadas = categoriasOrdenadas();
   catGrid.innerHTML = ordenadas.map(c => {
     const lancamentosCat = transacoes.filter(t => t.categoriaId === c.id);
     const totalGasto = lancamentosCat.reduce((s,t) => s + t.valor, 0);
-    const favorita = prefsCategorias.favoritas.includes(c.id);
+    const favorita = c.favorita;
     return `<div class="cat-card" draggable="true" data-cat-card="${c.id}">
       <div class="swatch" style="background:${c.cor}"></div>
       <div class="cat-info">
@@ -601,11 +699,17 @@ function renderCategorias(){
   ativarDragDropCategorias();
 }
 
-function alternarFavorita(id){
-  const idx = prefsCategorias.favoritas.indexOf(id);
-  if(idx === -1) prefsCategorias.favoritas.push(id); else prefsCategorias.favoritas.splice(idx,1);
-  salvarPrefsCategorias();
-  renderCategorias();
+// Ordem salva na conta (campo `ordem`); empate desempata pelo id
+function categoriasOrdenadas(){
+  return [...categorias].sort((a,b) => (a.ordem - b.ordem) || (Number(a.id) - Number(b.id)));
+}
+
+async function alternarFavorita(id){
+  const c = categoriaPorId(id);
+  await tentar(async () => {
+    await api('PUT', `/categorias/${id}`, { favorita: !c.favorita });
+    await recarregarERenderizar();
+  });
 }
 
 function abrirEdicaoCategoria(id){
@@ -634,24 +738,38 @@ catEditTipoSegmented.querySelectorAll('button').forEach(btn => {
   });
 });
 document.getElementById('catEditCancelar').addEventListener('click', () => { catEditCard.hidden = true; });
-document.getElementById('catEditSalvar').addEventListener('click', () => {
+const btnCatEditSalvar = document.getElementById('catEditSalvar');
+btnCatEditSalvar.addEventListener('click', () => comBotaoOcupado(btnCatEditSalvar, async () => {
   const nome = catEditNome.value.trim();
   if(!nome){ toast('Dê um nome pra categoria', 'error'); return; }
-  const cor = catEditCor.value;
+  const cor = catEditCor.value.toUpperCase();
   if(categoriaEditandoId){
-    const c = categoriaPorId(categoriaEditandoId);
-    Object.assign(c, { nome, cor, tipo: catEditTipo });
+    const atual = categoriaPorId(categoriaEditandoId);
+    const mudancas = { nome, cor };
+    if(catEditTipo !== atual.tipo) mudancas.tipo = catEditTipo;
+    await api('PUT', `/categorias/${categoriaEditandoId}`, mudancas);
     toast('Categoria atualizada');
   }else{
-    const novaCat = { id: gerarId(), nome, cor, tipo: catEditTipo, icone:'🏷️' };
-    categorias.push(novaCat);
-    prefsCategorias.ordem.push(novaCat.id);
-    salvarPrefsCategorias();
+    const ultimaOrdem = categorias.reduce((m,c) => Math.max(m, c.ordem), 0);
+    await api('POST', '/categorias', { nome, cor, tipo: catEditTipo, icone:'🏷️', ordem: ultimaOrdem + 1 });
     toast('Categoria criada');
   }
   catEditCard.hidden = true;
-  renderCategorias();
-});
+  await recarregarERenderizar();
+}));
+
+// Grava a nova ordem na conta: só manda as categorias que mudaram de posição
+async function salvarOrdemCategorias(ordemIds){
+  const mudaram = ordemIds
+    .map((id, i) => ({ id, ordem: i + 1 }))
+    .filter(({ id, ordem }) => categoriaPorId(id).ordem !== ordem);
+  mudaram.forEach(({ id, ordem }) => { categoriaPorId(id).ordem = ordem; });
+  renderCategorias(); // mostra a nova ordem na hora
+  await tentar(async () => {
+    await Promise.all(mudaram.map(({ id, ordem }) => api('PUT', `/categorias/${id}`, { ordem })));
+  });
+  await tentar(recarregarERenderizar);
+}
 
 // Drag-and-drop nativo pra reordenar os cartões de categoria
 function ativarDragDropCategorias(){
@@ -666,13 +784,12 @@ function ativarDragDropCategorias(){
       card.classList.remove('drag-over');
       const idAlvo = card.dataset.catCard;
       if(!idArrastando || idArrastando === idAlvo) return;
-      const ordem = prefsCategorias.ordem;
+      const ordem = categoriasOrdenadas().map(c => c.id);
       const de = ordem.indexOf(idArrastando);
       const para = ordem.indexOf(idAlvo);
       ordem.splice(de,1);
       ordem.splice(para,0,idArrastando);
-      salvarPrefsCategorias();
-      renderCategorias();
+      salvarOrdemCategorias(ordem);
     });
   });
 }
@@ -772,7 +889,14 @@ function iniciarOnboardingSePrimeiraVez(){
 // =====================================================================
 popularSelectsPeriodo();
 setTipoFormulario('despesa');
-renderDashboard();
-renderDespesas();
-renderReceitas();
-renderCategorias();
+
+// Já tinha entrado antes? Usa o token salvo pra voltar direto pro app.
+(async function retomarSessao(){
+  if(!tokenSalvo()) return;
+  try{
+    const usuario = await api('GET', '/eu');
+    await entrarNoApp({ token: tokenSalvo(), usuario });
+  }catch(e){
+    if(e.status !== 401) toast(e.message, 'error');
+  }
+})();

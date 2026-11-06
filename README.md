@@ -65,7 +65,7 @@ Lista completa em [docs/requisitos.md](docs/requisitos.md).
 
 | Camada | Tecnologia |
 | --- | --- |
-| Front-end | HTML, CSS e JavaScript, Chart.js, jsPDF, Driver.js (publicado no GitHub Pages) |
+| Front-end | HTML, CSS e JavaScript, Chart.js, jsPDF, Driver.js (publicado na Vercel junto com a API) |
 | Back-end | Node.js, Express, bcryptjs, JSON Web Token |
 | Banco de dados | MySQL 8 (também funciona em MariaDB) |
 | Testes | `node:test` (sem dependências extras) |
@@ -74,7 +74,9 @@ Lista completa em [docs/requisitos.md](docs/requisitos.md).
 
 ```
 .
-├── index.html, script.js, styles.css   protótipo navegável (front-end)
+├── index.html, script.js, styles.css   front-end (conversa com a API em /api)
+├── api/index.js                        função da Vercel que publica a API
+├── vercel.json, package.json           configuração da hospedagem na Vercel
 ├── backend/                            API REST (lógica do sistema)
 │   ├── src/regras/                     validações, filtros e cálculo do balanço
 │   ├── src/servicos/                   regras que consultam dados (conta, categorias, lançamentos)
@@ -92,10 +94,16 @@ Lista completa em [docs/requisitos.md](docs/requisitos.md).
 
 ## Como rodar
 
-### Protótipo (só o front-end)
+### Jeito mais rápido (sem banco)
 
-Abra o `index.html` no navegador, ou use a extensão Live Server do VS Code.
-Também está publicado em <https://wsdxryann.github.io/Projeto-fincancas/>.
+```bash
+cd backend
+npm install
+npm run dev:memoria                # abre em http://localhost:3000
+```
+
+A API também serve o front, então é só abrir <http://localhost:3000>.
+Os dados ficam em memória e somem quando o servidor reinicia.
 
 ### Banco de dados
 
@@ -114,14 +122,40 @@ Precisa do Node.js 18 ou mais novo.
 cd backend
 npm install
 cp .env.example .env               # ajuste usuário e senha do MySQL e o JWT_SEGREDO
-npm start                          # API em http://localhost:3000/api
+npm start                          # site em http://localhost:3000, API em /api
 ```
 
-Sem MySQL instalado, dá para testar com dados em memória: `npm run dev:memoria`.
+Se preferir o Live Server do VS Code para o front, deixe a API rodando: o front aponta sozinho para `http://localhost:3000/api`.
 
 Login de exemplo (seed e modo memória): **thiago@exemplo.com** / **123456**.
 
 Os endpoints, o formato das respostas e as regras estão em [backend/README.md](backend/README.md).
+
+### Publicar na Vercel
+
+O mesmo projeto da Vercel publica o front e a API (a função `api/index.js` atende tudo em `/api`).
+
+1. **Banco na nuvem.** Crie um MySQL 8 gratuito (por exemplo, no [Aiven](https://aiven.io/free-mysql-database)).
+   Rode `db/schema.sql` nele (e `db/seed.sql`, se quiser os dados de exemplo).
+   Se o provedor recusar a criação das triggers, dá para apagar esse trecho do script: a API já confere o tipo da categoria.
+2. **Projeto na Vercel.** Importe o repositório. Em *Settings → Build and Deployment*, deixe
+   **Root Directory** vazio (a raiz do repositório, não `backend/`) e **Framework Preset** como *Other*.
+3. **Variáveis de ambiente** (*Settings → Environment Variables*):
+
+   | Variável | Valor |
+   | --- | --- |
+   | `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD` | dados de conexão do MySQL |
+   | `DB_NAME` | `poupee` |
+   | `DB_SSL` | `true` |
+   | `DB_SSL_CA` | certificado da CA do provedor (no Aiven, o "CA certificate" da página do serviço), colado inteiro |
+   | `JWT_SEGREDO` | um texto longo e aleatório |
+
+4. Faça um novo deploy. Para conferir, abra `https://<seu-projeto>.vercel.app/api/saude`: deve aparecer `"modo":"mysql"`.
+
+Sem `DB_HOST`, a Vercel sobe em **modo demonstração** (`"modo":"memoria"`): funciona com o login de exemplo,
+mas os dados podem sumir a qualquer momento. Serve para testar, não para usar de verdade.
+
+A cópia no GitHub Pages só tem o front, sem API; use o endereço da Vercel.
 
 ### Testes
 
@@ -159,7 +193,6 @@ lançamento pertence a uma categoria do mesmo tipo (despesa ou receita).
 
 ## Próximos passos
 
-- Ligar as telas à API (login, lançamentos, categorias e balanço)
 - Lembretes de contas a vencer
 - Lançamentos recorrentes
 - Metas de gastos por categoria
