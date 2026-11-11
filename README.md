@@ -67,7 +67,7 @@ Lista completa em [docs/requisitos.md](docs/requisitos.md).
 | --- | --- |
 | Front-end | HTML, CSS e JavaScript, Chart.js, jsPDF, Driver.js (publicado na Vercel junto com a API) |
 | Back-end | Node.js, Express, bcryptjs, JSON Web Token |
-| Banco de dados | MySQL 8 (também funciona em MariaDB) |
+| Banco de dados | PostgreSQL (Neon na nuvem) |
 | Testes | `node:test` (sem dependências extras) |
 
 ## Estrutura do repositório
@@ -80,7 +80,7 @@ Lista completa em [docs/requisitos.md](docs/requisitos.md).
 ├── backend/                            API REST (lógica do sistema)
 │   ├── src/regras/                     validações, filtros e cálculo do balanço
 │   ├── src/servicos/                   regras que consultam dados (conta, categorias, lançamentos)
-│   ├── src/repositorios/               acesso ao MySQL (e versão em memória para testes)
+│   ├── src/repositorios/               acesso ao PostgreSQL (e versão em memória para testes)
 │   └── test/                           testes automatizados
 ├── db/
 │   ├── schema.sql                      tabelas, triggers e view do balanço
@@ -107,12 +107,15 @@ Os dados ficam em memória e somem quando o servidor reinicia.
 
 ### Banco de dados
 
-Com o MySQL instalado:
+Com o PostgreSQL instalado:
 
 ```bash
-mysql -u root -p < db/schema.sql
-mysql -u root -p < db/seed.sql     # opcional: dados de exemplo
+createdb poupee
+psql -d poupee -f db/schema.sql
+psql -d poupee -f db/seed.sql      # opcional: dados de exemplo
 ```
+
+Se o banco estiver vazio, a API também cria as tabelas e os dados de exemplo sozinha ao subir.
 
 ### API
 
@@ -121,7 +124,7 @@ Precisa do Node.js 18 ou mais novo.
 ```bash
 cd backend
 npm install
-cp .env.example .env               # ajuste usuário e senha do MySQL e o JWT_SEGREDO
+cp .env.example .env               # ajuste o banco (DATABASE_URL ou DB_*) e o JWT_SEGREDO
 npm start                          # site em http://localhost:3000, API em /api
 ```
 
@@ -135,24 +138,17 @@ Os endpoints, o formato das respostas e as regras estão em [backend/README.md](
 
 O mesmo projeto da Vercel publica o front e a API (a função `api/index.js` atende tudo em `/api`).
 
-1. **Banco na nuvem.** Crie um MySQL 8 gratuito (por exemplo, no [Aiven](https://aiven.io/free-mysql-database)).
-   Rode `db/schema.sql` nele (e `db/seed.sql`, se quiser os dados de exemplo).
-   Se o provedor recusar a criação das triggers, dá para apagar esse trecho do script: a API já confere o tipo da categoria.
-2. **Projeto na Vercel.** Importe o repositório. Em *Settings → Build and Deployment*, deixe
-   **Root Directory** vazio (a raiz do repositório, não `backend/`) e **Framework Preset** como *Other*.
-3. **Variáveis de ambiente** (*Settings → Environment Variables*):
+1. **Projeto na Vercel.** Importe o repositório. Deixe **Root Directory** vazio (a raiz do repositório,
+   não `backend/`) e **Framework Preset** como *Other*.
+2. **Banco (Neon).** No projeto da Vercel, abra a aba **Storage → Create Database → Neon** e conecte ao projeto.
+   A integração cria a variável `DATABASE_URL` sozinha. (Se já tiver um banco no Neon, dá para colar a
+   *connection string* dele em `DATABASE_URL` em *Settings → Environment Variables*.)
+3. **Segredo do login.** Em *Settings → Environment Variables*, crie `JWT_SEGREDO` com um texto longo e aleatório.
+4. Faça um **Redeploy**. Na primeira conexão com o banco vazio, a API cria as tabelas de `db/schema.sql`
+   e os dados de exemplo de `db/seed.sql`. Para conferir, abra `https://<seu-projeto>.vercel.app/api/saude`:
+   deve aparecer `"modo":"postgres"`.
 
-   | Variável | Valor |
-   | --- | --- |
-   | `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD` | dados de conexão do MySQL |
-   | `DB_NAME` | `poupee` |
-   | `DB_SSL` | `true` |
-   | `DB_SSL_CA` | certificado da CA do provedor (no Aiven, o "CA certificate" da página do serviço), colado inteiro |
-   | `JWT_SEGREDO` | um texto longo e aleatório |
-
-4. Faça um novo deploy. Para conferir, abra `https://<seu-projeto>.vercel.app/api/saude`: deve aparecer `"modo":"mysql"`.
-
-Sem `DB_HOST`, a Vercel sobe em **modo demonstração** (`"modo":"memoria"`): funciona com o login de exemplo,
+Sem `DATABASE_URL`, a Vercel sobe em **modo demonstração** (`"modo":"memoria"`): funciona com o login de exemplo,
 mas os dados podem sumir a qualquer momento. Serve para testar, não para usar de verdade.
 
 A cópia no GitHub Pages só tem o front, sem API; use o endereço da Vercel.

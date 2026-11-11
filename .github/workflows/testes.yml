@@ -7,31 +7,28 @@ on:
 
 jobs:
   backend:
-    name: API (memória + MySQL 8)
+    name: API (memória + PostgreSQL 16)
     runs-on: ubuntu-latest
     defaults:
       run:
         working-directory: backend
 
     services:
-      mysql:
-        image: mysql:8.0
+      postgres:
+        image: postgres:16
         env:
-          MYSQL_ROOT_PASSWORD: root
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: poupee
         ports:
-          - 3306:3306
+          - 5432:5432
         options: >-
-          --health-cmd="mysqladmin ping -proot"
+          --health-cmd="pg_isready -U postgres"
           --health-interval=5s
           --health-timeout=5s
           --health-retries=20
 
     env:
-      DB_HOST: 127.0.0.1
-      DB_PORT: 3306
-      DB_USER: root
-      DB_PASSWORD: root
-      DB_NAME: poupee
+      DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5432/poupee
       DB_TESTE: '1'
 
     steps:
@@ -43,13 +40,11 @@ jobs:
           cache: npm
           cache-dependency-path: backend/package-lock.json
 
-      - name: Criar o banco a partir de db/schema.sql
+      - name: Criar o banco a partir de db/schema.sql e conferir o seed
         working-directory: .
-        run: mysql -h 127.0.0.1 -uroot -proot < db/schema.sql
-
-      - name: Conferir o seed
-        working-directory: .
-        run: mysql -h 127.0.0.1 -uroot -proot < db/seed.sql
+        run: |
+          psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -q -f db/schema.sql
+          psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -q -f db/seed.sql
 
       - run: npm ci
       - run: npm test

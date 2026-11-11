@@ -1,5 +1,5 @@
 // =====================================================================
-// REPOSITÓRIO EM MEMÓRIA — mesma interface do repositório MySQL.
+// REPOSITÓRIO EM MEMÓRIA — mesma interface do repositório PostgreSQL.
 // Usado nos testes automatizados e pra rodar a API sem banco instalado
 // (npm run dev:memoria). Os dados somem quando o servidor reinicia.
 // =====================================================================
