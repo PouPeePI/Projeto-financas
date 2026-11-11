@@ -1,6 +1,6 @@
 // Testa a API de ponta a ponta. Roda sempre com o repositório em memória;
-// com DB_TESTE=1 roda a mesma bateria contra um MySQL de verdade
-// (banco do .env, já criado com db/schema.sql — as tabelas são esvaziadas!).
+// com DB_TESTE=1 roda a mesma bateria contra um PostgreSQL de verdade
+// (banco do .env; as tabelas são criadas se faltarem e ESVAZIADAS!).
 require('dotenv').config({ quiet: true });
 const test = require('node:test');
 const assert = require('node:assert/strict');
@@ -197,13 +197,12 @@ function bateria(nome, prepararRepos) {
 bateria('API com repositório em memória', async () => ({ repos: criarRepositoriosMemoria() }));
 
 if (process.env.DB_TESTE === '1') {
-  bateria('API com MySQL', async () => {
-    const { criarPool } = require('../src/repositorios/mysql/conexao');
-    const { criarRepositoriosMysql } = require('../src/repositorios/mysql');
+  bateria('API com PostgreSQL', async () => {
+    const { criarPool, prepararBanco } = require('../src/repositorios/postgres/conexao');
+    const { criarRepositoriosPostgres } = require('../src/repositorios/postgres');
     const pool = criarPool();
-    await pool.query('DELETE FROM transacoes');
-    await pool.query('DELETE FROM categorias');
-    await pool.query('DELETE FROM usuarios');
-    return { repos: criarRepositoriosMysql(pool), finalizar: () => pool.end() };
+    await prepararBanco(pool);
+    await pool.query('TRUNCATE transacoes, categorias, usuarios RESTART IDENTITY CASCADE');
+    return { repos: criarRepositoriosPostgres(pool), finalizar: () => pool.end() };
   });
 }

@@ -1,8 +1,8 @@
 // Função da Vercel: todas as requisições /api/... caem aqui (ver vercel.json)
 // e são atendidas pelo mesmo app Express do back-end.
-// Variáveis de ambiente (configuradas no painel da Vercel): DB_HOST, DB_PORT,
-// DB_USER, DB_PASSWORD, DB_NAME, DB_SSL, DB_SSL_CA, JWT_SEGREDO.
-// Sem DB_HOST, roda em modo demonstração (dados de exemplo em memória).
+// Variáveis de ambiente (painel da Vercel): DATABASE_URL (a integração com o
+// Neon cria sozinha) e JWT_SEGREDO.
+// Sem DATABASE_URL, roda em modo demonstração (dados de exemplo em memória).
 const { montarApp } = require('../backend/src/montar');
 
 let appPronto = null;
@@ -10,7 +10,7 @@ let appPronto = null;
 module.exports = async (req, res) => {
   // O app é montado uma vez por instância e reaproveitado nas próximas chamadas
   if (!appPronto) {
-    appPronto = montarApp({ connectionLimit: 2 }).catch(err => {
+    appPronto = montarApp({ maxConexoes: 2 }).catch(err => {
       appPronto = null; // tenta de novo na próxima requisição
       throw err;
     });

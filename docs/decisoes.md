@@ -69,9 +69,19 @@ nas telas e nos filtros.
 O front é servido como arquivos estáticos e a API roda como função (`api/index.js`), usando o mesmo
 código de `backend/`. Como os dois ficam no mesmo endereço, o front chama `/api` sem precisar de CORS.
 
-**Banco:** a Vercel não oferece MySQL, então o banco fica num MySQL na nuvem (ex.: Aiven) com conexão
-por TLS (`DB_SSL=true`). Sem banco configurado, a API sobe em modo demonstração com os dados de exemplo
+**Banco:** veja a seção 7. Sem banco configurado, a API sobe em modo demonstração com os dados de exemplo
 em memória, que podem sumir a qualquer momento.
 
 **Favoritas e ordem das categorias** passam a ser salvas na conta (campos `favorita` e `ordem` da API),
 e não mais no navegador.
+
+## 7. PostgreSQL (Neon) no lugar do MySQL
+
+**Decisão (2026-11-10):** o banco passa a ser PostgreSQL, hospedado no Neon. O grupo já usa o Neon em outros
+projetos e ele se conecta à Vercel pela própria integração, que cria a variável `DATABASE_URL`.
+
+**O que mudou:** `db/schema.sql` e `db/seed.sql` foram reescritos para PostgreSQL (mesmas tabelas, colunas,
+restrições, triggers e view), o back-end usa o driver `pg` e o RNF003 passou a dizer PostgreSQL.
+Os ENUMs do MySQL viraram `CHECK`, o nome da categoria continua único sem diferenciar maiúsculas
+(índice em `lower(nome)`) e, num banco vazio, a API cria as tabelas e os dados de exemplo sozinha.
+

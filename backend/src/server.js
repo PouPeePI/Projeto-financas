@@ -1,5 +1,5 @@
-// Sobe a API localmente. Usa o MySQL do .env; com --memoria (npm run dev:memoria),
-// ou sem DB_HOST no .env, roda sem banco (dados de exemplo, perdidos ao reiniciar).
+// Sobe a API localmente. Usa o PostgreSQL do .env; com --memoria (npm run dev:memoria),
+// ou sem DATABASE_URL/DB_HOST no .env, roda sem banco (dados de exemplo, perdidos ao reiniciar).
 // Também serve o front (index.html, script.js, styles.css da raiz do repositório),
 // então dá pra abrir http://localhost:3000 direto.
 require('dotenv').config({ quiet: true });

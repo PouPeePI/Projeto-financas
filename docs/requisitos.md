@@ -30,7 +30,7 @@ Não há perfis administrativos.
 | --- | --- | --- |
 | RNF001 | Aplicação web, acessível por navegador moderno sem instalação | Obrigatório |
 | RNF002 | Interface intuitiva; registrar um lançamento em poucos segundos | Obrigatório |
-| RNF003 | Banco de dados relacional MySQL com dados do usuário, categorias e lançamentos | Obrigatório |
+| RNF003 | Banco de dados relacional PostgreSQL com dados do usuário, categorias e lançamentos | Obrigatório |
 | RNF004 | Identidade visual com laranja `#F2600C` como cor principal | Obrigatório |
 | RNF005 | Senhas guardadas com hash; cada usuário só acessa os próprios dados | Obrigatório |
 | RNF006 | Responsividade (computador, tablet e celular, menu recolhível) | Desejável |

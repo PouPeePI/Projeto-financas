@@ -39,7 +39,7 @@ function lerFiltros(query = {}) {
   return filtros;
 }
 
-// Mesma regra do WHERE do MySQL, usada pelo repositório em memória
+// Mesma regra do WHERE do PostgreSQL, usada pelo repositório em memória
 function correspondeFiltros(t, filtros) {
   const [ano, mes] = t.data.split('-').map(Number);
   if (filtros.tipo && t.tipo !== filtros.tipo) return false;

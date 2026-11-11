@@ -1,7 +1,7 @@
 # API do Poupee (back-end)
 
 Lógica do sistema: conta e login, CRUD de despesas e receitas, categorias, regras de negócio,
-validação de valores, filtros por mês/ano e cálculo do balanço. Node.js + Express + MySQL.
+validação de valores, filtros por mês/ano e cálculo do balanço. Node.js + Express + PostgreSQL.
 
 ## Como rodar
 
@@ -14,7 +14,8 @@ npm install
 # Login de exemplo: thiago@exemplo.com / 123456
 npm run dev:memoria
 
-# Com MySQL: crie o banco com db/schema.sql (e db/seed.sql se quiser dados de exemplo),
+# Com PostgreSQL: crie o banco com db/schema.sql (e db/seed.sql se quiser dados de exemplo)
+# ou deixe a API criar sozinha num banco vazio;
 # copie .env.example para .env, ajuste usuário/senha do banco e o JWT_SEGREDO e rode:
 npm start
 ```
@@ -26,7 +27,7 @@ Na Vercel, quem sobe a API é `api/index.js` (na raiz do repositório); veja o R
 
 ```bash
 npm test                 # regras + API usando o repositório em memória
-DB_TESTE=1 npm test      # também roda contra o MySQL do .env (ESVAZIA as tabelas!)
+DB_TESTE=1 npm test      # também roda contra o PostgreSQL do .env (ESVAZIA as tabelas!)
 ```
 
 ## Conta e login
@@ -135,11 +136,11 @@ Sempre `{ "erro": "mensagem pronta pra mostrar" }`. Erros de validação (400) t
 ```
 src/
   app.js                 rotas da API e tratamento de erros
-  server.js              sobe o servidor (MySQL ou memória)
+  server.js              sobe o servidor (PostgreSQL ou memória)
   erros.js               tipos de erro → status HTTP
   regras/                validação, filtros e cálculo do balanço (sem banco, fáceis de testar)
   servicos/              regras que precisam consultar dados (conta, categoria do mesmo tipo etc.)
-  repositorios/mysql/    único lugar com SQL
+  repositorios/postgres/ único lugar com SQL
   repositorios/memoria.js  mesma interface, sem banco
 test/                    testes automatizados (node --test)
 ```
