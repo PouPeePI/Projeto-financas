@@ -715,6 +715,9 @@ async function alternarFavorita(id){
 function abrirEdicaoCategoria(id){
   categoriaEditandoId = id;
   catEditCard.hidden = false;
+  btnCatEditExcluir.hidden = !id; // só dá pra excluir uma categoria que já existe
+  btnCatEditExcluir.textContent = 'Excluir';
+  confirmandoExclusaoCat = false;
   if(id){
     const c = categoriaPorId(id);
     catEditNome.value = c.nome;
@@ -757,6 +760,30 @@ btnCatEditSalvar.addEventListener('click', () => comBotaoOcupado(btnCatEditSalva
   catEditCard.hidden = true;
   await recarregarERenderizar();
 }));
+
+// Excluir categoria (RN008: só sem lançamentos). O primeiro clique pede confirmação.
+const btnCatEditExcluir = document.getElementById('catEditExcluir');
+let confirmandoExclusaoCat = false;
+btnCatEditExcluir.addEventListener('click', () => {
+  const id = categoriaEditandoId;
+  if(!id) return;
+  const usos = transacoes.filter(t => t.categoriaId === id).length;
+  if(usos > 0){
+    toast(`Essa categoria tem ${usos} ${usos === 1 ? 'lançamento' : 'lançamentos'}. Mude ou exclua ${usos === 1 ? 'ele' : 'eles'} antes de excluir a categoria.`, 'error');
+    return;
+  }
+  if(!confirmandoExclusaoCat){
+    confirmandoExclusaoCat = true;
+    btnCatEditExcluir.textContent = 'Confirmar exclusão';
+    return;
+  }
+  return comBotaoOcupado(btnCatEditExcluir, async () => {
+    await api('DELETE', `/categorias/${id}`);
+    toast('Categoria excluída');
+    catEditCard.hidden = true;
+    await recarregarERenderizar();
+  });
+});
 
 // Grava a nova ordem na conta: só manda as categorias que mudaram de posição
 async function salvarOrdemCategorias(ordemIds){
