@@ -15,6 +15,8 @@
   ·
   <a href="backend/README.md">API</a>
   ·
+  <a href="docs/documentacao-poupee.pdf">Documentação (PDF)</a>
+  ·
   <a href="docs/decisoes.md">Decisões</a>
 </p>
 
@@ -95,6 +97,7 @@ Lista completa em [docs/requisitos.md](docs/requisitos.md).
 │   ├── schema.sql                      tabelas, triggers e view do balanço
 │   └── seed.sql                        dados de exemplo
 ├── docs/
+│   ├── documentacao-poupee.pdf/.docx   documentação completa do PI (requisitos, modelagem, arquitetura, API, implantação)
 │   ├── requisitos.md                   requisitos, regras de negócio e casos de uso
 │   ├── decisoes.md                     registro de decisões do projeto
 │   └── img/                            diagramas e telas
@@ -174,6 +177,10 @@ Use sempre o endereço da Vercel: uma cópia no GitHub Pages teria só o front, 
 cd backend
 npm test
 ```
+
+## Arquitetura
+
+![Arquitetura do Poupee](docs/img/arquitetura.png)
 
 ## Modelagem
 
