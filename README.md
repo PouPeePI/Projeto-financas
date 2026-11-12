@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="docs/img/logo.svg" alt="Logo do Poupee" width="96">
+</p>
+
 <h1 align="center">Poupee: organizador de finanças</h1>
 
 <p align="center">
@@ -5,13 +9,17 @@
 </p>
 
 <p align="center">
-  <a href="https://wsdxryann.github.io/Projeto-fincancas/"><strong>Abrir o protótipo navegável</strong></a>
+  <a href="https://poupee-pi.vercel.app"><strong>Abrir o Poupee (poupee-pi.vercel.app)</strong></a>
   ·
   <a href="docs/requisitos.md">Requisitos</a>
   ·
   <a href="backend/README.md">API</a>
   ·
   <a href="docs/decisoes.md">Decisões</a>
+</p>
+
+<p align="center">
+  Login de exemplo: <strong>thiago@exemplo.com</strong> / <strong>123456</strong>, ou crie a sua conta.
 </p>
 
 ![Visão geral do Poupee](docs/img/telas/visao-geral.png)
@@ -53,9 +61,10 @@ Projeto Integrador do curso de **Tecnologia em Desenvolvimento de Software Multi
 - [x] Marcar despesa como paga ou a pagar com um clique
 - [x] Filtros por mês, ano, status e descrição
 - [x] Balanço do período: saldo, saldo previsto, contas pendentes e gastos por categoria
-- [x] Exportar lançamentos em CSV e PDF (protótipo)
+- [x] Exportar lançamentos em CSV e PDF
 - [x] Tema claro e escuro
-- [ ] Ligar as telas do protótipo à API (hoje o front ainda usa dados de exemplo)
+- [x] Telas ligadas à API, com os dados salvos no banco (PostgreSQL no Neon)
+- [x] Site publicado na Vercel: <https://poupee-pi.vercel.app>
 - [ ] Recuperar senha por e-mail
 - [ ] Conta bancária ([em discussão](docs/decisoes.md#5-conta-bancária-em-aberto))
 
@@ -136,6 +145,12 @@ Os endpoints, o formato das respostas e as regras estão em [backend/README.md](
 
 ### Publicar na Vercel
 
+O site oficial está em **<https://poupee-pi.vercel.app>**: projeto `poupee-pi` na Vercel, publicado a partir
+da branch `main` (cada PR mesclado vira um deploy novo), com o banco `poupee-db` no Neon (região São Paulo).
+Para conferir se está tudo no ar, abra <https://poupee-pi.vercel.app/api/saude>: deve aparecer `"modo":"postgres"`.
+
+Para montar do zero (por exemplo, numa conta nova):
+
 O mesmo projeto da Vercel publica o front e a API (a função `api/index.js` atende tudo em `/api`).
 
 1. **Projeto na Vercel.** Importe o repositório. Deixe **Root Directory** vazio (a raiz do repositório,
@@ -151,7 +166,7 @@ O mesmo projeto da Vercel publica o front e a API (a função `api/index.js` ate
 Sem `DATABASE_URL`, a Vercel sobe em **modo demonstração** (`"modo":"memoria"`): funciona com o login de exemplo,
 mas os dados podem sumir a qualquer momento. Serve para testar, não para usar de verdade.
 
-A cópia no GitHub Pages só tem o front, sem API; use o endereço da Vercel.
+Use sempre o endereço da Vercel: uma cópia no GitHub Pages teria só o front, sem a API, e não conseguiria entrar.
 
 ### Testes
 
