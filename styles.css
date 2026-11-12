@@ -120,7 +120,7 @@
     text-align:center;
   }
   .login-card .brand-mark{width:48px;height:48px;border-radius:14px;margin:0 auto 20px;}
-  .login-card .brand-mark svg{width:24px;height:24px;}
+  .login-card .brand-mark svg{width:100%;height:100%;}
   .login-card h1{font-size:1.4rem;margin:0 0 6px;}
   .login-card .sub{color:var(--text-muted);font-size:0.88rem;margin-bottom:26px;}
   .login-card .field{text-align:left;}
@@ -151,11 +151,11 @@
   .brand-mark{
     width:34px;height:34px;
     border-radius:10px;
-    background:var(--primary);
+    background:#F26B1D; /* laranja da logo, igual nos temas claro e escuro */
     display:flex;align-items:center;justify-content:center;
     flex-shrink:0;
   }
-  .brand-mark svg{width:18px;height:18px;stroke:#fff;}
+  .brand-mark svg{width:100%;height:100%;}
   .brand-name{font-weight:700;font-size:1.15rem;letter-spacing:-0.01em;margin:0;}
 
   .nav{display:flex;flex-direction:column;gap:2px;}

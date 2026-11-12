@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Poupee — Controle Financeiro</title>
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect width='24' height='24' rx='6' fill='%23F2600C'/%3E%3Cpath d='M4 8h16v9a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8Z' fill='none' stroke='white' stroke-width='2' stroke-linejoin='round'/%3E%3Cpath d='M4 8V6a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v2' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Crect width='48' height='48' rx='12' fill='%23F26B1D'/%3E%3Cg fill='none' stroke='%23fff' stroke-width='6.5' stroke-linecap='round'%3E%3Cpath d='M15.5 21.5v16.5'/%3E%3Ccircle cx='25' cy='24.5' r='7.25'/%3E%3C/g%3E%3Ccircle cx='36.2' cy='12.6' r='4.4' fill='%23FFD3B0'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -15,8 +15,9 @@
 
 <!-- SPRITE DE ÍCONES REUTILIZADOS (evita duplicar o mesmo SVG várias vezes no HTML) -->
 <svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" style="position:absolute;width:0;height:0;overflow:hidden;">
-  <symbol id="icon-brand" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-    <rect x="3" y="7" width="18" height="13" rx="2"/><path d="M3 10h18"/><path d="M7 15h.01"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+  <!-- Logo do Poupee: o "p" branco com o ponto pêssego (o fundo laranja vem do .brand-mark) -->
+  <symbol id="icon-brand" viewBox="0 0 48 48">
+    <g fill="none" stroke="#fff" stroke-width="6.5" stroke-linecap="round"><path d="M15.5 21.5v16.5"/><circle cx="25" cy="24.5" r="7.25"/></g><circle cx="36.2" cy="12.6" r="4.4" fill="#FFD3B0"/>
   </symbol>
   <symbol id="icon-theme" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
     <circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>
@@ -31,7 +32,7 @@
 
   <header class="landing-nav">
     <div class="brand">
-      <div class="brand-mark"><svg viewBox="0 0 24 24"><use href="#icon-brand"></use></svg></div>
+      <div class="brand-mark"><svg viewBox="0 0 48 48" aria-hidden="true"><use href="#icon-brand"></use></svg></div>
       <span class="brand-name">Poupee</span>
     </div>
     <div class="landing-nav-actions">
@@ -230,7 +231,7 @@
   </div>
   <div class="login-card">
     <div class="brand-mark">
-      <svg viewBox="0 0 24 24"><use href="#icon-brand"></use></svg>
+      <svg viewBox="0 0 48 48" aria-hidden="true"><use href="#icon-brand"></use></svg>
     </div>
     <h1>Entrar no Poupee</h1>
     <p class="sub">Controle suas despesas e receitas em um só lugar</p>
@@ -259,7 +260,7 @@
   </div>
   <div class="login-card">
     <div class="brand-mark">
-      <svg viewBox="0 0 24 24"><use href="#icon-brand"></use></svg>
+      <svg viewBox="0 0 48 48" aria-hidden="true"><use href="#icon-brand"></use></svg>
     </div>
     <h1>Criar conta no Poupee</h1>
     <p class="sub">Leva menos de um minuto pra começar</p>
@@ -300,7 +301,7 @@
   <aside class="sidebar">
     <div class="brand">
       <div class="brand-mark">
-        <svg viewBox="0 0 24 24"><use href="#icon-brand"></use></svg>
+        <svg viewBox="0 0 48 48" aria-hidden="true"><use href="#icon-brand"></use></svg>
       </div>
       <h1 class="brand-name">Poupee</h1>
     </div>
