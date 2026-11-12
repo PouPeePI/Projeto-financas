@@ -9,8 +9,8 @@ Guia rápido de Git/GitHub para todo o time usar no dia a dia.
 Isso só precisa ser feito uma vez:
 
 ```bash
-git clone https://github.com/WsdxrYann/Projeto-fincancas.git
-cd Projeto-fincancas
+git clone https://github.com/PouPeePI/Projeto-financas.git
+cd Projeto-financas
 ```
 
 ## 2. Criar sua branch
