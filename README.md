@@ -45,7 +45,7 @@ o saldo do período e a distribuição dos gastos por categoria.
 
 Projeto Integrador do curso de **Tecnologia em Desenvolvimento de Software Multiplataforma** da
 **Fatec Franca "Dr. Thomaz Novelino"** (Centro Paula Souza), 2026.
-<!-- Completar: disciplina, professor(a) orientador(a) e semestre -->
+Disciplina-chave: **Engenharia de Software II** (2º semestre).
 
 ## Equipe
 
