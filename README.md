@@ -5,7 +5,7 @@
 <h1 align="center">Poupee: organizador de finanças</h1>
 
 <p align="center">
-  Controle despesas e receitas em um só lugar e saiba exatamente para onde seu dinheiro está indo.
+  Controle as suas despesas e receitas em um só lugar e saiba exatamente para onde seu dinheiro está indo.
 </p>
 
 <p align="center">
