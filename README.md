@@ -53,7 +53,7 @@ Disciplina-chave: **Engenharia de Software II** (2º semestre).
 - Eleonora Cintra Castro
 - João Pedro Racero Santos
 - Ryan Filipe Damasceno
-- Thiago Veronez da Silva Santos
+- Thiago Veronez da Silva Sаntos
 
 | Frente | Responsabilidades |
 | --- | --- |
