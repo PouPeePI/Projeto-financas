@@ -15,6 +15,8 @@
   ·
   <a href="backend/README.md">API</a>
   ·
+  <a href="https://youtu.be/EKjECa7p4eM">Vídeo de demonstração</a>
+  ·
   <a href="docs/documentacao-poupee.pdf">Documentação (PDF)</a>
   ·
   <a href="docs/decisoes.md">Decisões</a>
@@ -25,6 +27,12 @@
 </p>
 
 ![Visão geral do Poupee](docs/img/telas/visao-geral.png)
+
+## Vídeo de demonstração
+
+[![Assista ao pitch do Poupee no YouTube](https://img.youtube.com/vi/EKjECa7p4eM/hqdefault.jpg)](https://youtu.be/EKjECa7p4eM)
+
+Pitch e demonstração do Poupee no YouTube: <https://youtu.be/EKjECa7p4eM>
 
 ## Sobre o projeto
 
